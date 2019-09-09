@@ -220,6 +220,7 @@ EOF
     fi
 
     if [[ ! -f ~/solana/fullnode-identity.json ]]; then
+      echo "Creating fullnode identity"
       solana-keygen new -o ~/solana/fullnode-identity.json
     fi
     args+=(--identity ~/solana/fullnode-identity.json)
