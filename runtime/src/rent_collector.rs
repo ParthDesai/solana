@@ -36,33 +36,34 @@ impl RentCollector {
     //  the account rent collected, if any
     //
     pub fn update(&self, account: &mut Account) -> u64 {
-        if account.data.is_empty() || account.rent_epoch > self.epoch {
-            0
-        } else {
-            let slots_elapsed: u64 = (account.rent_epoch..=self.epoch)
-                .map(|epoch| self.epoch_schedule.get_slots_in_epoch(epoch + 1))
-                .sum();
-
-            let (rent_due, exempt) = self.rent_calculator.due(
-                account.lamports,
-                account.data.len(),
-                slots_elapsed as f64 / self.slots_per_year,
-            );
-
-            if exempt || rent_due != 0 {
-                if account.lamports > rent_due {
-                    account.rent_epoch = self.epoch + 1;
-                    account.lamports -= rent_due;
-                    rent_due
-                } else {
-                    let rent_charged = account.lamports;
-                    *account = Account::default();
-                    rent_charged
-                }
-            } else {
-                // maybe collect rent later, leave account alone
-                0
-            }
-        }
+        return 0;
+        //        if account.data.is_empty() || account.rent_epoch > self.epoch {
+        //            0
+        //        } else {
+        //            let slots_elapsed: u64 = (account.rent_epoch..=self.epoch)
+        //                .map(|epoch| self.epoch_schedule.get_slots_in_epoch(epoch + 1))
+        //                .sum();
+        //
+        //            let (rent_due, exempt) = self.rent_calculator.due(
+        //                account.lamports,
+        //                account.data.len(),
+        //                slots_elapsed as f64 / self.slots_per_year,
+        //            );
+        //
+        //            if exempt || rent_due != 0 {
+        //                if account.lamports > rent_due {
+        //                    account.rent_epoch = self.epoch + 1;
+        //                    account.lamports -= rent_due;
+        //                    rent_due
+        //                } else {
+        //                    let rent_charged = account.lamports;
+        //                    *account = Account::default();
+        //                    rent_charged
+        //                }
+        //            } else {
+        //                // maybe collect rent later, leave account alone
+        //                0
+        //            }
+        //        }
     }
 }
