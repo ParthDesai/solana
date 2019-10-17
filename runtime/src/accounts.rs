@@ -655,11 +655,11 @@ impl Accounts {
         txs: &'a [Transaction],
         txs_iteration_order: Option<&'a [usize]>,
         res: &'a [Result<()>],
-        loaded: &'a [Result<TransactionLoadResult>],
+        loaded: &'a mut [Result<TransactionLoadResult>],
     ) -> Vec<(&'a Pubkey, &'a Account)> {
         let mut accounts = Vec::new();
         for (i, (raccs, tx)) in loaded
-            .iter()
+            .iter_mut()
             .zip(OrderedIterator::new(txs, txs_iteration_order))
             .enumerate()
         {
@@ -668,25 +668,28 @@ impl Accounts {
             }
 
             let message = &tx.message();
-            let acc = raccs.as_ref().unwrap();
-            for (((j, key), account), credit) in message
+            let acc = raccs.as_mut().unwrap();
+            for (((i, key), account), credit) in message
                 .account_keys
                 .iter()
                 .enumerate()
                 .zip(acc.0.iter())
                 .zip(acc.2.iter())
             {
-                if message.is_debitable(j) {
+                if message.is_debitable(i) {
                     accounts.push((key, account));
-                } else {
+                }
+                if *credit > 0 {
+                    // Increment credit-only account balance Atomic
                     self.credit_only_account_locks
-                        .read()
-                        .unwrap()
-                        .as_ref()
-                        .expect("Collect accounts should only be called before a commit, and credit only account locks should exist before a commit")
-                        .get(key)
-                        .unwrap()
-                        .add_credits_and_mark_rent_debtor(*credit);
+                                .read()
+                                .unwrap()
+                                .as_ref()
+                                .expect("Collect accounts should only be called before a commit, and credit only account locks should exist before a commit")
+                                .get(key)
+                                .unwrap()
+                                .credits
+                                .fetch_add(*credit, Ordering::Relaxed);
                 }
             }
         }
