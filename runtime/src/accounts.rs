@@ -609,12 +609,12 @@ impl Accounts {
     where
         I: IntoIterator<Item = (Pubkey, CreditOnlyLock)>,
     {
-        let mut accounts: Vec<(Pubkey, Account)> = vec![];
+        // let mut accounts: Vec<(Pubkey, Account)> = vec![];
         let mut total_rent_collected = 0;
 
         {
-            let accounts_index = self.accounts_db.accounts_index.read().unwrap();
-            let storage = self.accounts_db.storage.read().unwrap();
+            // let accounts_index = self.accounts_db.accounts_index.read().unwrap();
+            // let storage = self.accounts_db.storage.read().unwrap();
 
             for (pubkey, lock) in credit_only_account_locks {
                 let lock_count = *lock.lock_count.lock().unwrap();
@@ -627,8 +627,9 @@ impl Accounts {
                 let credit = lock.credits.load(Ordering::Relaxed);
 
                 let (mut account, _) =
-                    AccountsDB::load(&storage, ancestors, &accounts_index, &pubkey)
-                        .unwrap_or_default();
+                    //AccountsDB::load(&storage, ancestors, &accounts_index, &pubkey)
+                    //    .unwrap_or_default();
+                self.load_slow(ancestors, &pubkey).unwrap_or_default();
 
                 if lock.rent_debtor.load(Ordering::Relaxed) {
                     let rent_collected = rent_collector.update(&mut account);
@@ -636,16 +637,17 @@ impl Accounts {
                 }
 
                 account.lamports += credit;
-                accounts.push((pubkey, account));
+
+                self.store_slow(fork, &pubkey, &account);
             }
         }
 
-        let account_to_store: Vec<(&Pubkey, &Account)> = accounts
-            .iter()
-            .map(|(key, account)| (key, account))
-            .collect();
-
-        self.accounts_db.store(fork, &account_to_store);
+        //        let account_to_store: Vec<(&Pubkey, &Account)> = accounts
+        //            .iter()
+        //            .map(|(key, account)| (key, account))
+        //            .collect();
+        //
+        //        self.accounts_db.store(fork, &account_to_store);
 
         total_rent_collected
     }
