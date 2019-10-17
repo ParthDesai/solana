@@ -1609,8 +1609,8 @@ impl Bank {
             let message = &tx.message();
             let acc = raccs.as_ref().unwrap();
 
-            for (i, rent) in acc.3.iter().enumerate() {
-                if message.is_debitable(i) {
+            for (j, rent) in acc.3.iter().enumerate() {
+                if message.is_debitable(j) {
                     collected_rent += *rent;
                 }
             }
