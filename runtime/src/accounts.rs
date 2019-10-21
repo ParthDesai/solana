@@ -610,6 +610,7 @@ impl Accounts {
         I: IntoIterator<Item = (Pubkey, CreditOnlyLock)>,
     {
         let mut total_rent_collected = 0;
+        let mut accounts: Vec<(Pubkey, Account)> = vec![];
         for (pubkey, lock) in credit_only_account_locks {
             let lock_count = *lock.lock_count.lock().unwrap();
             if lock_count != 0 {
@@ -628,9 +629,17 @@ impl Accounts {
                     total_rent_collected += rent_collector.update(&mut account);
                 }
                 account.lamports += credit;
-                self.store_slow(fork, &pubkey, &account);
+
+                accounts.push((pubkey, account));
             }
         }
+
+        let accounts_to_store: Vec<(&Pubkey, &Account)> = accounts
+            .iter()
+            .map(|(pubkey, account)| (pubkey, account))
+            .collect();
+
+        self.accounts_db.store(fork, &accounts_to_store);
         total_rent_collected
     }
 
