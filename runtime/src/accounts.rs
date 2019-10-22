@@ -606,7 +606,7 @@ impl Accounts {
         let mut total_rent_collected = 0;
 
         {
-            let accounts_index = self.accounts_db.accounts_index.read().unwrap();
+            let storage = self.accounts_db.storage.read().unwrap();
 
             for (pubkey, lock) in credit_only_account_locks {
                 let lock_count = *lock.lock_count.lock().unwrap();
@@ -618,7 +618,7 @@ impl Accounts {
                 }
                 let credit = lock.credits.load(Ordering::Relaxed);
 
-                let storage = self.accounts_db.storage.read().unwrap();
+                let accounts_index = self.accounts_db.accounts_index.read().unwrap();
 
                 let (mut account, _) =
                     AccountsDB::load(&storage, ancestors, &accounts_index, &pubkey)
