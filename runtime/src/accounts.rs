@@ -620,18 +620,18 @@ impl Accounts {
                 );
             }
             let credit = lock.credits.load(Ordering::Relaxed);
-            if credit > 0 || lock.rent_debtor.load(Ordering::Relaxed) {
-                let mut account = self
-                    .load_slow(ancestors, &pubkey)
-                    .map(|(account, _)| account)
-                    .unwrap_or_default();
-                if lock.rent_debtor.load(Ordering::Relaxed) {
-                    total_rent_collected += rent_collector.update(&mut account);
-                }
-                account.lamports += credit;
 
-                accounts.push((pubkey, account));
+            let mut account = self
+                .load_slow(ancestors, &pubkey)
+                .map(|(account, _)| account)
+                .unwrap_or_default();
+
+            if lock.rent_debtor.load(Ordering::Relaxed) {
+                total_rent_collected += rent_collector.update(&mut account);
             }
+            account.lamports += credit;
+
+            accounts.push((pubkey, account));
         }
 
         let accounts_to_store: Vec<(&Pubkey, &Account)> = accounts
